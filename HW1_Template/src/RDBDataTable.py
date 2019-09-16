@@ -25,6 +25,7 @@ class RDBDataTable(BaseDataTable):
 
         self._logger = logging.getLogger()
 
+    @staticmethod
     def _get_default_connection(self):
         result = pymysql.connect(host='localhost',
                                  user='dbuser',
@@ -84,6 +85,56 @@ class RDBDataTable(BaseDataTable):
 
         return res, data
 
+    @staticmethod
+    def template_to_where_clause(template):
+        """
+
+        :param template: One of those weird templates
+        :return: WHERE clause corresponding to the template.
+        """
+
+        if template is None or template == {}:
+            result = (None, None)
+        else:
+            args = []
+            terms = []
+
+            for k, v in template.items():
+                terms.append(" " + k + "=%s ")
+                args.append(v)
+
+            w_clause = "AND".join(terms)
+            w_clause = " WHERE " + w_clause
+
+            result = (w_clause, args)
+
+        return result
+
+    @staticmethod
+    def create_select(table_name, template, fields, order_by=None, limit=None, offset=None):
+        """
+        Produce a select statement: sql string and args.
+
+        :param table_name: Table name: May be fully qualified dbname.tablename or just tablename.
+        :param fields: Columns to select (an array of column name)
+        :param template: One of Don Ferguson's weird JSON/python dictionary templates.
+        :param order_by: Ignore for now.
+        :param limit: Ignore for now.
+        :param offset: Ignore for now.
+        :return: A tuple of the form (sql string, args), where the sql string is a template.
+        """
+
+        if fields is None:
+            field_list = " * "
+        else:
+            field_list = " " + ",".join(fields) + " "
+
+        w_clause, args = RDBDataTable.template_to_where_clause(template)
+
+        sql = "select " + field_list + " from " + table_name + " " + w_clause
+
+        return sql, args
+
     def find_by_primary_key(self, key_fields, field_list=None):
         """
 
@@ -105,7 +156,11 @@ class RDBDataTable(BaseDataTable):
         :return: A list containing dictionaries. A dictionary is in the list representing each record
             that matches the template. The dictionary only contains the requested fields.
         """
-        pass
+        sql, args = self.create_select(self._data["table_name"], template, field_list)
+        _, data = self.run_q(sql, args)
+        if data is not None:
+            return data
+        return []
 
     def delete_by_key(self, key_fields):
         """

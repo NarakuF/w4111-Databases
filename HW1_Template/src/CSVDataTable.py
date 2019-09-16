@@ -58,7 +58,12 @@ class CSVDataTable(BaseDataTable):
         for c in key_columns:
             if c not in table_columns:
                 raise Exception("Invalid key columns.")
-        # TODO: check if key_columns are duplicated
+        primary_keys = []
+        for r in self._rows:
+            pk = {k: r[k] for k in key_columns}
+            if pk in primary_keys:
+                raise Exception("Duplicated primary key.")
+            primary_keys.append(pk)
 
     def __str__(self):
 
@@ -129,6 +134,15 @@ class CSVDataTable(BaseDataTable):
 
         return result
 
+    @staticmethod
+    def _project(row, field_list):
+        if field_list is None:
+            return row
+        result = {}
+        for k in field_list:
+            result[k] = row[k]
+        return result
+
     def find_by_primary_key(self, key_fields, field_list=None):
         """
 
@@ -137,11 +151,17 @@ class CSVDataTable(BaseDataTable):
         :return: None, or a dictionary containing the requested fields for the record identified
             by the key.
         """
+        if len(self._data["key_columns"]) != len(key_fields):
+            raise Exception("Not a primary key.")
         template = dict(zip(self._data["key_columns"], key_fields))
-        result = self.find_by_template(template)
-        if len(result) == 1:
+        result = self.find_by_template(template, field_list=field_list)
+        length = len(result)
+        if length > 1:
+            raise Exception("Not a valid primary key.")
+        elif length == 1:
             return result[0]
-        return None
+        else:
+            return None
 
     def find_by_template(self, template, field_list=None, limit=None, offset=None, order_by=None):
         """
@@ -156,9 +176,8 @@ class CSVDataTable(BaseDataTable):
         """
         result = []
         for r in self._rows:
-            if self.matches_template(r, template):
-                if field_list is not None:
-                    r = {k: r[k] for k in field_list}
+            if CSVDataTable.matches_template(r, template):
+                r = CSVDataTable._project(r, field_list)
                 result.append(r)
         return result
 
@@ -194,7 +213,7 @@ class CSVDataTable(BaseDataTable):
     def validate_primary_key(self, new_record):
         primary_key = {k: new_record[k] for k in self._data["key_columns"]}
         if self.find_by_template(primary_key):
-            raise Exception("Duplicate primary key.")
+            raise ValueError("Duplicate primary key.")
 
     def update_by_key(self, key_fields, new_values):
         """
@@ -207,7 +226,7 @@ class CSVDataTable(BaseDataTable):
         idx = self._rows.index(row)
         if row is None:
             return 0
-        new_row = self.update_row(row, new_values)
+        new_row = CSVDataTable.update_row(row, new_values)
         self.validate_primary_key(new_row)
         self._rows[idx] = new_row
         return 1
@@ -221,12 +240,12 @@ class CSVDataTable(BaseDataTable):
         :return: Number of rows updated.
         """
         for r in self.find_by_template(template):
-            new_r = self.update_row(r, new_values)
+            new_r = CSVDataTable.update_row(r, new_values)
             self.validate_primary_key(new_r)
         count = 0
         for idx, r in enumerate(self._rows):
-            if self.matches_template(r, template):
-                new_r = self.update_row(r, new_values)
+            if CSVDataTable.matches_template(r, template):
+                new_r = CSVDataTable.update_row(r, new_values)
                 self._rows[idx] = new_r
                 count += 1
         return count
