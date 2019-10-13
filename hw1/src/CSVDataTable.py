@@ -1,4 +1,3 @@
-
 from src.BaseDataTable import BaseDataTable
 import copy
 import csv
@@ -27,15 +26,17 @@ class CSVDataTable(BaseDataTable):
         :param connect_info: Dictionary of parameters necessary to connect to the data.
         :param key_columns: List, in order, of the columns (fields) that comprise the primary key.
         """
+        if key_columns is not None and len(key_columns) != len(set(key_columns)):
+            raise ValueError("Duplicated key columns")
         self._data = {
             "table_name": table_name,
             "connect_info": connect_info,
             "key_columns": key_columns,
+            "table_columns": None,
             "debug": debug
         }
 
         self._logger = logging.getLogger()
-
         self._logger.debug("CSVDataTable.__init__: data = " + json.dumps(self._data, indent=2))
 
         if rows is not None:
@@ -43,26 +44,38 @@ class CSVDataTable(BaseDataTable):
         else:
             self._rows = []
             self._load()
-
         if self._rows:
             self._data["table_columns"] = list(self._rows[0].keys())
         self.validate_columns()
 
+    @staticmethod
+    def validate_fields(source, target):
+        """
+        Validate if the source are in the target
+        """
+        if source is None:
+            return
+        if not set(source).issubset(set(target)):
+            raise ValueError("The columns not in table")
+
     def validate_columns(self):
+        """
+        Validate the table columns and key columns
+        and check if every key column is in table columns.
+        """
         table_columns = self._data.get("table_columns")
         key_columns = self._data.get("key_columns")
-        if not table_columns:
-            raise Exception("Invalid DataTable.")
-        if not key_columns:
-            raise Exception("No key columns.")
-        for c in key_columns:
-            if c not in table_columns:
-                raise Exception("Invalid key columns.")
+        if table_columns is None:
+            raise ValueError("Error: No table columns.")
+        if key_columns is None:
+            self._data["key_columns"] = {}
+            return
+        CSVDataTable.validate_fields(key_columns, table_columns)
         primary_keys = []
         for r in self._rows:
-            pk = {k: r[k] for k in key_columns}
+            pk = [r[k] for k in key_columns]
             if pk in primary_keys:
-                raise Exception("Duplicated primary key.")
+                raise ValueError("Duplicated primary key")
             primary_keys.append(pk)
 
     def __str__(self):
@@ -83,7 +96,7 @@ class CSVDataTable(BaseDataTable):
                     tmp_row[k] = "***"
                 rows_to_print.append(tmp_row)
 
-            rows_to_print.extend(self._rows[int(-1*temp_r)-1:-1])
+            rows_to_print.extend(self._rows[int(-1 * temp_r) - 1:-1])
 
         df = pd.DataFrame(rows_to_print)
         result += "\nSome Rows: = \n" + str(df)
@@ -91,8 +104,6 @@ class CSVDataTable(BaseDataTable):
         return result
 
     def _add_row(self, r):
-        if self._rows is None:
-            self._rows = []
         self._rows.append(r)
 
     def _load(self):
@@ -116,8 +127,11 @@ class CSVDataTable(BaseDataTable):
         dir_info = self._data["connect_info"].get("directory")
         file_n = self._data["connect_info"].get("file_name")
         full_name = os.path.join(dir_info, file_n)
+        fieldnames = self._data["table_columns"]
+        if fieldnames is None:
+            return
         with open(full_name, 'w') as txt_file:
-            csv_d_wtr = csv.DictWriter(txt_file, fieldnames=self._data["key_columns"])
+            csv_d_wtr = csv.DictWriter(txt_file, fieldnames=fieldnames)
             csv_d_wtr.writeheader()
             for r in self._rows:
                 csv_d_wtr.writerow(r)
@@ -135,7 +149,10 @@ class CSVDataTable(BaseDataTable):
         return result
 
     @staticmethod
-    def _project(row, field_list):
+    def _project(row, field_list=None):
+        """
+        Select the row's fields only in the field list.
+        """
         if field_list is None:
             return row
         result = {}
@@ -151,13 +168,14 @@ class CSVDataTable(BaseDataTable):
         :return: None, or a dictionary containing the requested fields for the record identified
             by the key.
         """
-        if len(self._data["key_columns"]) != len(key_fields):
-            raise Exception("Not a primary key.")
-        template = dict(zip(self._data["key_columns"], key_fields))
-        result = self.find_by_template(template, field_list=field_list)
+        key_columns = self._data["key_columns"]
+        if not key_columns or key_fields is None or len(key_columns) != len(key_fields):
+            raise ValueError("Not a valid primary key")
+        template = dict(zip(key_columns, key_fields))
+        result = self.find_by_template(template, field_list)
         length = len(result)
         if length > 1:
-            raise Exception("Not a valid primary key.")
+            raise ValueError("Duplicate primary key or not a primary key")
         elif length == 1:
             return result[0]
         else:
@@ -174,6 +192,10 @@ class CSVDataTable(BaseDataTable):
         :return: A list containing dictionaries. A dictionary is in the list representing each record
             that matches the template. The dictionary only contains the requested fields.
         """
+        if template is None:
+            return self._rows
+        CSVDataTable.validate_fields(template.keys(), self._data["table_columns"])
+        CSVDataTable.validate_fields(field_list, self._data["table_columns"])
         result = []
         for r in self._rows:
             if CSVDataTable.matches_template(r, template):
@@ -201,19 +223,19 @@ class CSVDataTable(BaseDataTable):
         :param template: Template to determine rows to delete.
         :return: Number of rows deleted.
         """
+        if template is None:
+            return 0
         records = self.find_by_template(template)
         self._rows = [r for r in self._rows if r not in records]
         return len(records)
 
     @staticmethod
     def update_row(row, new_values):
+        """
+        Update the row with new values.
+        """
         new_row = {k: new_values[k] if k in new_values else row[k] for k in row}
         return new_row
-
-    def validate_primary_key(self, new_record):
-        primary_key = {k: new_record[k] for k in self._data["key_columns"]}
-        if self.find_by_template(primary_key):
-            raise ValueError("Duplicate primary key.")
 
     def update_by_key(self, key_fields, new_values):
         """
@@ -222,16 +244,9 @@ class CSVDataTable(BaseDataTable):
         :param new_values: A dict of field:value to set for updated row.
         :return: Number of rows updated.
         """
-        row = self.find_by_primary_key(key_fields)
-        idx = self._rows.index(row)
-        if row is None:
-            return 0
-        new_row = CSVDataTable.update_row(row, new_values)
-        self.validate_primary_key(new_row)
-        self._rows[idx] = new_row
-        return 1
+        tmp = dict(zip(self._data["key_columns"], key_fields))
+        return self.update_by_template(tmp, new_values)
 
-    # TODO: how to update
     def update_by_template(self, template, new_values):
         """
 
@@ -239,15 +254,23 @@ class CSVDataTable(BaseDataTable):
         :param new_values: New values to set for matching fields.
         :return: Number of rows updated.
         """
-        for r in self.find_by_template(template):
-            new_r = CSVDataTable.update_row(r, new_values)
-            self.validate_primary_key(new_r)
+        if new_values is None or len(new_values) == 0:
+            return 0
+        self.validate_fields(new_values.keys(), self._data["table_columns"])
         count = 0
-        for idx, r in enumerate(self._rows):
-            if CSVDataTable.matches_template(r, template):
-                new_r = CSVDataTable.update_row(r, new_values)
-                self._rows[idx] = new_r
+        backup = self._rows
+        new_records = self.find_by_template(template)
+        for r in new_records:
+            idx = self._rows.index(r)
+            new_row = CSVDataTable.update_row(r, new_values)
+            key = [new_row[k] for k in self._data["key_columns"]]
+            self._rows[idx] = new_row
+            try:
+                self.find_by_primary_key(key)
                 count += 1
+            except Exception as e:
+                self._rows = backup
+                raise e
         return count
 
     def insert(self, new_record):
@@ -256,8 +279,18 @@ class CSVDataTable(BaseDataTable):
         :param new_record: A dictionary representing a row to add to the set of records.
         :return: None
         """
-        self.validate_primary_key(new_record)
+        if new_record is None:
+            return
+        self.validate_fields(new_record.keys(), self._data["table_columns"])
+        backup = self._rows
+        key = [new_record[k] for k in self._data["key_columns"]]
         self._rows.append(new_record)
+        try:
+            self.find_by_primary_key(key)
+        except Exception as e:
+            self._rows = backup
+            raise e
+        print("Insert successfully.")
 
     def get_rows(self):
         return self._rows
