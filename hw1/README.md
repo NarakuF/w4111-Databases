@@ -36,3 +36,9 @@ I can see relational Database is much more efficient than CSV, as storage.
 4. Primary key for Appearances: (playerID VARCHAR(12), teamID VARCHAR(8), yearID VARCHAR(12))
 5. In CSVDataTable, I manaully check there is no duplicate primary key in *init* method when I create a new instance to  enforce that constraint.
 6. In RDBDataTable, I set the corresponding primary key, NOTNULL and DataType in MySQL Workbench and it can check for that constraint. Python code just need to raise exception if database occurs any exceptions. 
+
+## TODO
+1) I liked your effort to implement update by template for CSV (+0.5) but there were some mistakes. Your update by template does not correctly revert the table for failed updates. The list is updated in place in your code (backup and self._rows is the same object). Adding a test would help!
+2) I liked the primary key constraint checks. You could use a set of tuples instead of a list of lists for faster checks.
+3) I liked using exceptions for errors. It would be better if your tests checked the error messages of the exceptions to see if the correct exception was thrown.
+4) In your code you catch a lot of Exceptions and then you throw them again. As it is, it is redundant. It could be useful if you raised a more specific Exception that is more relevant for each method.
