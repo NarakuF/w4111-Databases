@@ -29,7 +29,7 @@ pd.set_option('display.width', 256)
 pd.set_option('display.max_columns', 12)
 
 
-class RDBDataTable():
+class RDBDataTable:
     """
     RDBDataTable is relation DB implementation of the BaseDataTable.
     I have removed the dependency/subclassing from BaseDataTable to reduce confusion.
@@ -41,7 +41,7 @@ class RDBDataTable():
     # NOTE: You may just use the default connector if you want.
     _default_connect_info = {
         'host': 'localhost',
-        'user': 'root',
+        'user': 'dbuser',
         'password': 'dbuserdbuser',
         'db': 'lahman2019clean',
         'port': 3306
@@ -59,8 +59,7 @@ class RDBDataTable():
 
         # RDBDataTable is not told the keys. It can extract from the schema using DML statememts.
         if key_columns is not None:
-            raise ValueError("RDBs know the keys. You should set in the DB use DML."
-            )
+            raise ValueError("RDBs know the keys. You should set in the DB use DML.")
 
         # Initialize and store information in the parent class.
         super().__init__()
@@ -126,6 +125,9 @@ class RDBDataTable():
         """
 
         # -- TO IMPLEMENT --
+        sql = f"SELECT COUNT(*) FROM {self._full_table_name}"
+        _, data = dbutils.run_q(sql, conn=self._cnx)
+        self._row_count = data[0]['COUNT(*)']
 
     def get_primary_key_columns(self):
         """
@@ -137,6 +139,10 @@ class RDBDataTable():
 
         # Hint. Google "get primary key columns mysql"
         # Hint. THE ORDER OF THE COLUMNS IN THE KEY DEFINITION MATTERS.
+        sql = f"SHOW KEYS FROM {self._full_table_name} WHERE Key_name = 'PRIMARY'"
+        _, data = dbutils.run_q(sql, conn=self._cnx)
+        primary_key = [d['Column_name'] for d in data]
+        self._key_columns = primary_key
 
     def get_sample_rows(self, no_of_rows=_rows_to_print):
         """
@@ -144,7 +150,9 @@ class RDBDataTable():
         :param no_of_rows: Number of rows to include in a sample of the data.
         :return: A Pandas dataframe containing the first _row_to_print number of rows.
         """
-        q = "select * from " + self._full_table_name + " limit " + str(RDBDataTable._rows_to_print)
+        # TODO
+        # q = "select * from " + self._full_table_name + " limit " + str(RDBDataTable._rows_to_print)
+        q = "select * from " + self._full_table_name + " limit " + str(no_of_rows)
         self._sample_rows = pd.read_sql(q, self._cnx)
 
     def get_related_resources(self):
@@ -312,3 +320,16 @@ class RDBDataTable():
         #
         pass
 
+    @property
+    def row_count(self):
+        return self._row_count
+
+    @property
+    def key_columns(self):
+        return self._key_columns
+
+
+if __name__ == '__main__':
+    db = RDBDataTable('people', 'lahman2019clean')
+    print(db.row_count)
+    print(db.key_columns)
