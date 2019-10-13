@@ -1,0 +1,538 @@
+
+******************** test_init_fail ********************
+Table is People and key_columns are ['playerID', 'playerID']
+Init failed. Exception = Duplicated key columns
+Correct answer.
+******************** end test_init_fail ********************
+
+
+******************** test_load_fail ********************
+Table is People and key_columns are ['yearID']
+Load failed. Exception = The columns not in table
+Correct answer.
+******************** end test_load_fail ********************
+
+
+******************** test_load_fail2 ********************
+Table is People and key_columns are ['birthYear']
+Load failed. Exception = Duplicated primary key
+Correct answer.
+******************** end test_load_fail2 ********************
+
+
+******************** test_load_good ********************
+Loaded table = 
+ CSVDataTable: config data = 
+{
+  "table_name": "People",
+  "connect_info": {
+    "directory": "D:\\GitHub\\NarakuF\\w4111-Databases\\HW1_Template\\Data\\Baseball",
+    "file_name": "people.csv"
+  },
+  "key_columns": [
+    "playerID"
+  ],
+  "table_columns": [
+    "playerID",
+    "birthYear",
+    "birthMonth",
+    "birthDay",
+    "birthCountry",
+    "birthState",
+    "birthCity",
+    "deathYear",
+    "deathMonth",
+    "deathDay",
+    "deathCountry",
+    "deathState",
+    "deathCity",
+    "nameFirst",
+    "nameLast",
+    "nameGiven",
+    "weight",
+    "height",
+    "bats",
+    "throws",
+    "debut",
+    "finalGame",
+    "retroID",
+    "bbrefID"
+  ],
+  "debug": true
+}
+Some Rows: = 
+     playerID birthYear birthMonth birthDay birthCountry birthState      birthCity deathYear deathMonth deathDay  ...  nameLast        nameGiven weight height bats throws       debut   finalGame   retroID    bbrefID
+0   aardsda01      1981         12       27          USA         CO         Denver                                ...   Aardsma      David Allan    215     75    R      R  2004-04-06  2015-08-23  aardd001  aardsda01
+1   aaronha01      1934          2        5          USA         AL         Mobile                                ...     Aaron      Henry Louis    180     72    R      R  1954-04-13  1976-10-03  aaroh101  aaronha01
+2   aaronto01      1939          8        5          USA         AL         Mobile      1984          8       16  ...     Aaron       Tommie Lee    190     75    R      R  1962-04-10  1971-09-26  aarot101  aaronto01
+3    aasedo01      1954          9        8          USA         CA         Orange                                ...      Aase   Donald William    190     75    R      R  1977-07-26  1990-10-03  aased001   aasedo01
+4    abadan01      1972          8       25          USA         FL     Palm Beach                                ...      Abad    Fausto Andres    184     73    L      L  2001-09-10  2006-04-13  abada001   abadan01
+5         ***       ***        ***      ***          ***        ***            ***       ***        ***      ***  ...       ***              ***    ***    ***  ***    ***         ***         ***       ***        ***
+6         ***       ***        ***      ***          ***        ***            ***       ***        ***      ***  ...       ***              ***    ***    ***  ***    ***         ***         ***       ***        ***
+7   zupcibo01      1966          8       18          USA         PA     Pittsburgh                                ...    Zupcic           Robert    220     76    R      R  1991-09-07  1994-08-04  zupcb001  zupcibo01
+8    zupofr01      1939          8       29          USA         CA  San Francisco      2005          3       25  ...      Zupo     Frank Joseph    182     71    L      R  1957-07-01  1961-05-09  zupof101   zupofr01
+9   zuvelpa01      1958         10       31          USA         CA      San Mateo                                ...   Zuvella             Paul    173     72    R      R  1982-09-04  1991-05-02  zuvep001  zuvelpa01
+10  zuverge01      1924          8       20          USA         MI        Holland      2014          9        8  ...  Zuverink           George    195     76    R      R  1951-04-21  1959-06-15  zuveg101  zuverge01
+11  zwilldu01      1888         11        2          USA         MO      St. Louis      1978          3       27  ...  Zwilling  Edward Harrison    160     66    L      L  1910-08-14  1916-07-12  zwild101  zwilldu01
+
+[12 rows x 24 columns]
+Load successfully.
+Correct answer.
+******************** end test_load_good ********************
+
+
+******************** test_find_by_primary_key_fail ********************
+Find by primary key with None key columns
+Exception = Not a valid primary key
+Correct answer.
+******************** end test_find_by_primary_key_fail ********************
+
+
+******************** test_find_by_primary_key_fail2 ********************
+Find by primary key with None key fields
+Exception = Not a valid primary key
+Correct answer.
+******************** end test_find_by_primary_key_fail2 ********************
+
+
+******************** test_find_by_primary_key_good ********************
+Find by primary key 'aardsda01'
+Result =
+ {
+  "playerID": "aardsda01",
+  "birthYear": "1981",
+  "birthMonth": "12",
+  "birthDay": "27",
+  "birthCountry": "USA",
+  "birthState": "CO",
+  "birthCity": "Denver",
+  "deathYear": "",
+  "deathMonth": "",
+  "deathDay": "",
+  "deathCountry": "",
+  "deathState": "",
+  "deathCity": "",
+  "nameFirst": "David",
+  "nameLast": "Aardsma",
+  "nameGiven": "David Allan",
+  "weight": "215",
+  "height": "75",
+  "bats": "R",
+  "throws": "R",
+  "debut": "2004-04-06",
+  "finalGame": "2015-08-23",
+  "retroID": "aardd001",
+  "bbrefID": "aardsda01"
+}
+Correct answer.
+******************** end test_find_by_primary_key_good ********************
+
+
+******************** test_find_by_template_fail ********************
+Find by template {"birthCountry": "USA", "teamID": "BS1"}
+Exception = The columns not in table
+Correct answer.
+******************** end test_find_by_template_fail ********************
+
+
+******************** test_find_by_template_good ********************
+Find by template {"birthMonth": "9", "birthDay": "22", "birthCountry": "USA", "birthState": "MA"}
+Result =
+ [
+  {
+    "playerID": "howarma01",
+    "nameFirst": "Matt",
+    "nameLast": "Howard",
+    "nameGiven": "Matthew Christopher"
+  },
+  {
+    "playerID": "keatibo01",
+    "nameFirst": "Bob",
+    "nameLast": "Keating",
+    "nameGiven": "Robert M."
+  },
+  {
+    "playerID": "lonerwa01",
+    "nameFirst": "Walter",
+    "nameLast": "Lonergan",
+    "nameGiven": "Walter Lawrence"
+  },
+  {
+    "playerID": "powerdo01",
+    "nameFirst": "Doc",
+    "nameLast": "Powers",
+    "nameGiven": "Michael Riley"
+  }
+]
+Correct answer.
+******************** end test_find_by_template_good ********************
+
+
+******************** test_delete_by_key_fail ********************
+Delete by primary key with None
+Exception = Not a valid primary key
+Correct answer.
+******************** end test_delete_by_key_fail ********************
+
+
+******************** test_delete_by_key_good ********************
+Delete by primary key 'AARDSDA01'
+Wrong primary key and nothing to delete. The number of the rows deleted = 0
+
+Delete by primary key 'aardsda01'
+BEFORE deleting, the row =
+ {
+  "playerID": "aardsda01",
+  "birthYear": "1981",
+  "birthMonth": "12",
+  "birthDay": "27",
+  "birthCountry": "USA",
+  "birthState": "CO",
+  "birthCity": "Denver",
+  "deathYear": "",
+  "deathMonth": "",
+  "deathDay": "",
+  "deathCountry": "",
+  "deathState": "",
+  "deathCity": "",
+  "nameFirst": "David",
+  "nameLast": "Aardsma",
+  "nameGiven": "David Allan",
+  "weight": "215",
+  "height": "75",
+  "bats": "R",
+  "throws": "R",
+  "debut": "2004-04-06",
+  "finalGame": "2015-08-23",
+  "retroID": "aardd001",
+  "bbrefID": "aardsda01"
+}
+Deleting...
+Delete returned  1
+
+AFTER deleting, the row =
+ null
+Correct answer.
+******************** end test_delete_by_key_good ********************
+
+
+******************** test_delete_by_template_fail ********************
+Delete by template {"birthCountry": "USA", "teamID": "BS1"}
+Exception = The columns not in table
+Correct answer.
+******************** end test_delete_by_template_fail ********************
+
+
+******************** test_delete_by_template_good ********************
+Delete by template key {"birthMonth": "9", "birthDay": "22", "birthCountry": "USA","birthState": "MA", "deathCountry": "USA"}
+BEFORE deleting, all rows =
+ [
+  {
+    "playerID": "keatibo01",
+    "birthYear": "1862",
+    "birthMonth": "9",
+    "birthDay": "22",
+    "birthCountry": "USA",
+    "birthState": "MA",
+    "birthCity": "Springfield",
+    "deathYear": "1922",
+    "deathMonth": "1",
+    "deathDay": "19",
+    "deathCountry": "USA",
+    "deathState": "MA",
+    "deathCity": "Springfield",
+    "nameFirst": "Bob",
+    "nameLast": "Keating",
+    "nameGiven": "Robert M.",
+    "weight": "190",
+    "height": "76",
+    "bats": "L",
+    "throws": "L",
+    "debut": "1887-08-27",
+    "finalGame": "1887-08-27",
+    "retroID": "keatb101",
+    "bbrefID": "keatibo01"
+  },
+  {
+    "playerID": "lonerwa01",
+    "birthYear": "1885",
+    "birthMonth": "9",
+    "birthDay": "22",
+    "birthCountry": "USA",
+    "birthState": "MA",
+    "birthCity": "Boston",
+    "deathYear": "1958",
+    "deathMonth": "1",
+    "deathDay": "23",
+    "deathCountry": "USA",
+    "deathState": "MA",
+    "deathCity": "Lexington",
+    "nameFirst": "Walter",
+    "nameLast": "Lonergan",
+    "nameGiven": "Walter Lawrence",
+    "weight": "156",
+    "height": "67",
+    "bats": "R",
+    "throws": "R",
+    "debut": "1911-08-17",
+    "finalGame": "1911-09-22",
+    "retroID": "lonew101",
+    "bbrefID": "lonerwa01"
+  },
+  {
+    "playerID": "powerdo01",
+    "birthYear": "1870",
+    "birthMonth": "9",
+    "birthDay": "22",
+    "birthCountry": "USA",
+    "birthState": "MA",
+    "birthCity": "Pittsfield",
+    "deathYear": "1909",
+    "deathMonth": "4",
+    "deathDay": "26",
+    "deathCountry": "USA",
+    "deathState": "PA",
+    "deathCity": "Philadelphia",
+    "nameFirst": "Doc",
+    "nameLast": "Powers",
+    "nameGiven": "Michael Riley",
+    "weight": "160",
+    "height": "68",
+    "bats": "R",
+    "throws": "R",
+    "debut": "1898-06-12",
+    "finalGame": "1909-04-12",
+    "retroID": "powem102",
+    "bbrefID": "powerdo01"
+  }
+]
+Deleting...
+Delete returned  3
+
+AFTER deleting, all rows =
+ []
+Correct answer.
+******************** end test_delete_by_template_good ********************
+
+
+******************** test_update_by_key_fail ********************
+Update by primary key "abadijo01", new value is {"playerID": "howarma01"}
+Exception = Duplicate primary key or not a primary key
+Correct answer.
+******************** end test_update_by_key_fail ********************
+
+
+******************** test_update_by_key_good ********************
+Update by primary key "abadijo01", new value is {"nameFirst": "Jackson", "nameLast": "Copper"}
+BEFORE updating, the row =
+ {
+  "playerID": "abadijo01",
+  "birthYear": "1850",
+  "birthMonth": "11",
+  "birthDay": "4",
+  "birthCountry": "USA",
+  "birthState": "PA",
+  "birthCity": "Philadelphia",
+  "deathYear": "1905",
+  "deathMonth": "5",
+  "deathDay": "17",
+  "deathCountry": "USA",
+  "deathState": "NJ",
+  "deathCity": "Pemberton",
+  "nameFirst": "John",
+  "nameLast": "Abadie",
+  "nameGiven": "John W.",
+  "weight": "192",
+  "height": "72",
+  "bats": "R",
+  "throws": "R",
+  "debut": "1875-04-26",
+  "finalGame": "1875-06-10",
+  "retroID": "abadj101",
+  "bbrefID": "abadijo01"
+}
+Updating...
+Update returned  1
+
+AFTER Updating, the row =
+ {
+  "playerID": "abadijo01",
+  "birthYear": "1850",
+  "birthMonth": "11",
+  "birthDay": "4",
+  "birthCountry": "USA",
+  "birthState": "PA",
+  "birthCity": "Philadelphia",
+  "deathYear": "1905",
+  "deathMonth": "5",
+  "deathDay": "17",
+  "deathCountry": "USA",
+  "deathState": "NJ",
+  "deathCity": "Pemberton",
+  "nameFirst": "Jackson",
+  "nameLast": "Copper",
+  "nameGiven": "John W.",
+  "weight": "192",
+  "height": "72",
+  "bats": "R",
+  "throws": "R",
+  "debut": "1875-04-26",
+  "finalGame": "1875-06-10",
+  "retroID": "abadj101",
+  "bbrefID": "abadijo01"
+}
+Correct answer.
+******************** end test_update_by_key_good ********************
+
+
+******************** test_update_by_template_fail ********************
+Update by template {"birthYear": "1995"}, new value is {"playerID": "abbotod01"}
+Exception = Duplicate primary key or not a primary key
+Correct answer.
+******************** end test_update_by_template_fail ********************
+
+
+******************** test_update_by_template_good ********************
+Update by template {"birthYear": "1995", "birthMonth": "11"}, new value is {"nameFirst": "Jackson", "nameLast": "Copper"}
+BEFORE updating, all rows =
+ [
+  {
+    "playerID": "martefr01",
+    "birthYear": "1995",
+    "birthMonth": "11",
+    "birthDay": "24",
+    "birthCountry": "D.R.",
+    "birthState": "Sanchez Ramirez",
+    "birthCity": "Cotui",
+    "deathYear": "",
+    "deathMonth": "",
+    "deathDay": "",
+    "deathCountry": "",
+    "deathState": "",
+    "deathCity": "",
+    "nameFirst": "Francis",
+    "nameLast": "Martes",
+    "nameGiven": "Francis Euclides",
+    "weight": "225",
+    "height": "73",
+    "bats": "R",
+    "throws": "R",
+    "debut": "2017-06-09",
+    "finalGame": "2017-10-01",
+    "retroID": "martf003",
+    "bbrefID": "martefr01"
+  },
+  {
+    "playerID": "rosaram01",
+    "birthYear": "1995",
+    "birthMonth": "11",
+    "birthDay": "20",
+    "birthCountry": "D.R.",
+    "birthState": "Distrito Nacional",
+    "birthCity": "Santo Domingo Centro",
+    "deathYear": "",
+    "deathMonth": "",
+    "deathDay": "",
+    "deathCountry": "",
+    "deathState": "",
+    "deathCity": "",
+    "nameFirst": "Amed",
+    "nameLast": "Rosario",
+    "nameGiven": "German Amed",
+    "weight": "189",
+    "height": "74",
+    "bats": "R",
+    "throws": "R",
+    "debut": "2017-08-01",
+    "finalGame": "2018-09-30",
+    "retroID": "rosaa003",
+    "bbrefID": "rosaram01"
+  }
+]
+Updating...
+Update returned  2
+
+AFTER Updating, the row =
+ [
+  {
+    "playerID": "martefr01",
+    "birthYear": "1995",
+    "birthMonth": "11",
+    "birthDay": "24",
+    "birthCountry": "D.R.",
+    "birthState": "Sanchez Ramirez",
+    "birthCity": "Cotui",
+    "deathYear": "",
+    "deathMonth": "",
+    "deathDay": "",
+    "deathCountry": "",
+    "deathState": "",
+    "deathCity": "",
+    "nameFirst": "Jackson",
+    "nameLast": "Copper",
+    "nameGiven": "Francis Euclides",
+    "weight": "225",
+    "height": "73",
+    "bats": "R",
+    "throws": "R",
+    "debut": "2017-06-09",
+    "finalGame": "2017-10-01",
+    "retroID": "martf003",
+    "bbrefID": "martefr01"
+  },
+  {
+    "playerID": "rosaram01",
+    "birthYear": "1995",
+    "birthMonth": "11",
+    "birthDay": "20",
+    "birthCountry": "D.R.",
+    "birthState": "Distrito Nacional",
+    "birthCity": "Santo Domingo Centro",
+    "deathYear": "",
+    "deathMonth": "",
+    "deathDay": "",
+    "deathCountry": "",
+    "deathState": "",
+    "deathCity": "",
+    "nameFirst": "Jackson",
+    "nameLast": "Copper",
+    "nameGiven": "German Amed",
+    "weight": "189",
+    "height": "74",
+    "bats": "R",
+    "throws": "R",
+    "debut": "2017-08-01",
+    "finalGame": "2018-09-30",
+    "retroID": "rosaa003",
+    "bbrefID": "rosaram01"
+  }
+]
+Correct answer.
+******************** end test_update_by_template_good ********************
+
+
+******************** test_insert_fail ********************
+Attempting to insert bad row =  {
+  "playerID": "arroych01",
+  "birthYear": "2000",
+  "birthMonth": "1",
+  "birthDay": "1"
+}
+Insert failed. Exception =  Duplicate primary key or not a primary key
+Correct answer.
+******************** end test_insert_fail ********************
+
+
+******************** test_insert_good ********************
+Attempting to insert good row =  {
+  "playerID": "coms4111f19",
+  "birthYear": "2000",
+  "birthMonth": "1",
+  "birthDay": "1"
+}
+Insert successfully.
+Correct answer.
+******************** end test_insert_good ********************
+
+
+Process finished with exit code 0

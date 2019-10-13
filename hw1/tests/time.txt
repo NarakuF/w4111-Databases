@@ -1,0 +1,62 @@
+
+Compare elapsed time between CSVDataTable and RDBDataTable.
+
+******************** test_init ********************
+Compare time elapsed for initialization.
+Time elapsed for CSVDataTable is  6.927446126937866 seconds.
+Time elapsed for RDBDataTable is  0.034938812255859375 seconds.
+******************** end test_init ********************
+
+
+******************** test_find_by_primary_key ********************
+Compare time elapsed for find_by_primary_key.
+Time elapsed for CSVDataTable is  0.007985591888427734 seconds.
+Time elapsed for RDBDataTable is  0.0009660720825195312 seconds.
+******************** end test_find_by_primary_key ********************
+
+
+******************** test_find_by_template ********************
+Compare time elapsed for find_by_template.
+Time elapsed for CSVDataTable is  0.009975910186767578 seconds.
+Time elapsed for RDBDataTable is  0.022934913635253906 seconds.
+******************** end test_find_by_template ********************
+
+
+******************** test_delete_by_key ********************
+Compare time elapsed for delete_by_key.
+Time elapsed for CSVDataTable is  0.008009910583496094 seconds.
+Time elapsed for RDBDataTable is  0.0 seconds.
+******************** end test_delete_by_key ********************
+
+
+******************** test_delete_by_template ********************
+Compare time elapsed for delete_by_template.
+Time elapsed for CSVDataTable is  0.08078670501708984 seconds.
+Time elapsed for RDBDataTable is  0.02390456199645996 seconds.
+******************** end test_delete_by_template ********************
+
+
+******************** test_update_by_key ********************
+Compare time elapsed for update_by_key.
+Time elapsed for CSVDataTable is  0.016930341720581055 seconds.
+Time elapsed for RDBDataTable is  0.006130218505859375 seconds.
+******************** end test_update_by_key ********************
+
+
+******************** test_update_by_template ********************
+Compare time elapsed for update_by_template.
+Time elapsed for CSVDataTable is  1.5857672691345215 seconds.
+Time elapsed for RDBDataTable is  0.03091144561767578 seconds.
+******************** end test_update_by_template ********************
+
+
+******************** test_insert ********************
+Compare time elapsed for insert.
+Insert successfully.
+Time elapsed for CSVDataTable is  0.00898289680480957 seconds.
+Insert successfully.
+Time elapsed for RDBDataTable is  0.004956483840942383 seconds.
+******************** end test_insert ********************
+
+
+Process finished with exit code 0
