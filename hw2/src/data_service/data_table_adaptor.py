@@ -51,5 +51,7 @@ def get_databases():
 
     :return: A list of databases/schema at this endpoint.
     """
-    global _db_tables
+    # TODO: show databases just return global
+    # TODO: handle failure of insertion
+    # TODO: check invalid of db/table name or throw e
     return _db_tables

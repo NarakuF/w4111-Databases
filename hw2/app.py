@@ -27,6 +27,7 @@ _key_delimiter = "_"
 _host = "127.0.0.1"
 _port = 5002
 _api_base = "/api"
+_links = []
 
 application = Flask(__name__)
 
@@ -94,6 +95,14 @@ def log_and_extract_input(method, path_params=None):
         fields = fields.split(",")
         del args['fields']
         inputs['fields'] = fields
+    if args and args.get('limit', None):
+        limit = args.get('limit')
+        del args['limit']
+        inputs['limit'] = limit
+        offset = args.get('offset', None)
+        if offset:
+            del args['offset']
+            inputs['offset'] = offset
 
     log_message += " received: \n" + json.dumps(inputs, indent=2)
     logger.debug(log_message)
@@ -190,6 +199,14 @@ def dbs():
 
     # Hint: Implement the function in data_table_adaptor
     #
+    inputs = log_and_extract_input(dbs, None)
+    if not inputs.get('query_params', None):
+        handle_error(None, None)
+    databases = dta.get_databases()
+    databases = list(set([k.split('.')[0] for k in databases]))
+    data = json.dumps(databases)
+    res = Response(data, status=200, content_type='application/json')
+    return res
 
 
 @application.route("/api/databases/<dbname>", methods=["GET"])
@@ -206,6 +223,17 @@ def tbls(dbname):
 
     # Hint: Implement the function in data_table_adaptor
     #
+    if not inputs.get('query_params', None):
+        handle_error(None, None)
+    databases = dta.get_databases()
+    tables = []
+    for k in databases:
+        db, table = k.split('.')
+        if db == dbname:
+            tables.append(table)
+    data = json.dumps(tables)
+    res = Response(data, status=200, content_type='application/json')
+    return res
 
 
 @application.route('/api/<dbname>/<resource>/<primary_key>', methods=['GET', 'PUT', 'DELETE'])
@@ -228,6 +256,10 @@ def resource_by_id(dbname, resource, primary_key):
         # SOME CODE GOES HERE
         #
         # -- TO IMPLEMENT --
+        rdb = dta.get_rdb_table(resource, dbname)
+        key_fields = primary_key.split(_key_delimiter)
+        query_params = context.get('query_params', None)
+        fields = context.get('fields', None)
 
         if request.method == 'GET':
 
@@ -235,22 +267,28 @@ def resource_by_id(dbname, resource, primary_key):
             # SOME CODE GOES HERE
             #
             # -- TO IMPLEMENT --
-            pass
-
+            result = rdb.find_by_primary_key(key_fields, fields)
+            data = json.dumps(result, default=str)
+            res = Response(data, status=200, content_type='application/json')
+            return res
         elif request.method == 'DELETE':
             #
             # SOME CODE GOES HERE
             #
             # -- TO IMPLEMENT --
-            pass
-
+            result = rdb.delete_by_key(key_fields)
+            data = f'HTTP: 200 Successfully delete {str(result)} row(s).'
+            res = Response(data, status=200, content_type='text/plain; charset=utf-8')
+            return res
         elif request.method == 'PUT':
             #
             # SOME CODE GOES HERE
             #
             # -- TO IMPLEMENT --
-            pass
-
+            result = rdb.update_by_key(key_fields, query_params)
+            data = f'HTTP: 200 Successfully update {str(result)} row(s).'
+            res = Response(data, status=200, content_type='text/plain; charset=utf-8')
+            return res
     except Exception as e:
         print(e)
         return handle_error(e, result)
@@ -267,20 +305,33 @@ def get_resource(dbname, resource_name):
         # SOME CODE GOES HERE
         #
         # -- TO IMPLEMENT --
+        global _links
+        rdb = dta.get_rdb_table(resource_name, dbname)
+        query_params = context.get('query_params', None)
+        fields = context.get('fields', None)
+        limit = context.get('limit', None)
+        offset = context.get('offset', None)
 
         if request.method == 'GET':
             #
             # SOME CODE GOES HERE
             #
             # -- TO IMPLEMENT --
-            pass
-
+            result = rdb.find_by_template(query_params, fields, limit, offset)
+            data = json.dumps(result, default=str)
+            if limit is not None:
+                _links[0] = {'rel': 'current',
+                             'href': context.get('url', '')}
+            res = Response(data, status=200, content_type='application/json')
+            return res
         elif request.method == 'POST':
             #
             # SOME CODE GOES HERE
             #
             # -- TO IMPLEMENT --
-            pass
+            rdb.insert(query_params)
+            result = 'HTTP: 200 Entry successfully inserted.'
+            return Response(result, status=200, content_type='text/plain; charset=utf-8')
         else:
             result = "Invalid request."
             return result, 400, {'Content-Type': 'text/plain; charset=utf-8'}
