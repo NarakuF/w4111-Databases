@@ -1,5 +1,3 @@
-
-
 #########################################################
 #
 #
@@ -22,6 +20,7 @@ import src.data_service.dbutils as dbutils
 
 # You do not need to do anything about the logging stuff. You can just ignore, or you can use if you want.
 import logging
+
 logger = logging.getLogger()
 
 # Makes pretty print the RDBDataTable rows a little better.
@@ -166,7 +165,7 @@ class RDBDataTable:
         #
         pass
 
-    def get_links(self, target_table = None):
+    def get_links(self, target_table=None):
 
         # -- THANK ALY AND ARA --
         # Aly and Ara told me to get rid of this requirement or they would be unhappy.

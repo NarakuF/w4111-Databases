@@ -28,7 +28,6 @@ def get_rdb_table(table_name, db_name, key_columns=None, connect_info=None):
 
     # We have not yet accessed this table.
     if result is None:
-
         # Make an RDBDataTable for this database table.
         result = RDBDataTable.RDBDataTable(table_name, db_name, key_columns, connect_info)
 
@@ -55,13 +54,3 @@ def get_databases():
 
     # -- TO IMPLEMENT --
     pass
-
-
-
-
-
-
-
-
-
-
