@@ -51,6 +51,5 @@ def get_databases():
 
     :return: A list of databases/schema at this endpoint.
     """
-
-    # -- TO IMPLEMENT --
-    pass
+    global _db_tables
+    return _db_tables
