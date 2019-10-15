@@ -362,7 +362,7 @@ def get_by_path_key(dbname, parent_name, primary_key, target_name, target_key):
 
 # You can ignore this method.
 def handle_error(e, result):
-    return "Internal error.", 504, {'Content-Type': 'text/plain; charset=utf-8'}
+    return "HTTP: 504 Internal error.", 504, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 # run the app.
