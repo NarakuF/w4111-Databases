@@ -27,7 +27,6 @@ _key_delimiter = "_"
 _host = "127.0.0.1"
 _port = 5002
 _api_base = "/api"
-_links = []
 
 application = Flask(__name__)
 
@@ -305,7 +304,6 @@ def get_resource(dbname, resource_name):
         # SOME CODE GOES HERE
         #
         # -- TO IMPLEMENT --
-        global _links
         rdb = dta.get_rdb_table(resource_name, dbname)
         query_params = context.get('query_params', None)
         fields = context.get('fields', None)
@@ -318,10 +316,14 @@ def get_resource(dbname, resource_name):
             #
             # -- TO IMPLEMENT --
             result = rdb.find_by_template(query_params, fields, limit, offset)
-            data = json.dumps(result, default=str)
             if limit is not None:
-                _links[0] = {'rel': 'current',
-                             'href': context.get('url', '')}
+                url = context.get('url', '')
+                result['links'] = []
+                current = {'rel': 'current',
+                             'href': url}
+
+
+            data = json.dumps(result, default=str)
             res = Response(data, status=200, content_type='application/json')
             return res
         elif request.method == 'POST':
