@@ -320,9 +320,8 @@ def get_resource(dbname, resource_name):
                 url = context.get('url', '')
                 result['links'] = []
                 current = {'rel': 'current',
-                             'href': url}
-
-
+                           'href': url}
+                result['links'].append(current)
             data = json.dumps(result, default=str)
             res = Response(data, status=200, content_type='application/json')
             return res

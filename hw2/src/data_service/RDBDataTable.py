@@ -149,9 +149,7 @@ class RDBDataTable:
         :param no_of_rows: Number of rows to include in a sample of the data.
         :return: A Pandas dataframe containing the first _row_to_print number of rows.
         """
-        # TODO
-        # q = "select * from " + self._full_table_name + " limit " + str(RDBDataTable._rows_to_print)
-        q = "select * from " + self._full_table_name + " limit " + str(no_of_rows)
+        q = "select * from " + self._full_table_name + " limit " + str(RDBDataTable._rows_to_print)
         self._sample_rows = pd.read_sql(q, self._cnx)
 
     def get_related_resources(self):
