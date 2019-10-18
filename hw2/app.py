@@ -307,8 +307,10 @@ def get_resource(dbname, resource_name):
         rdb = dta.get_rdb_table(resource_name, dbname)
         query_params = context.get('query_params', None)
         fields = context.get('fields', None)
+        url = context.get('url', '')
         limit = context.get('limit', None)
         offset = context.get('offset', None)
+
 
         if request.method == 'GET':
             #
@@ -316,12 +318,10 @@ def get_resource(dbname, resource_name):
             #
             # -- TO IMPLEMENT --
             result = rdb.find_by_template(query_params, fields, limit, offset)
-            if limit is not None:
-                url = context.get('url', '')
-                result['links'] = get_links(url, limit, offset)
-                current = {'rel': 'current',
-                           'href': url}
-                result['links'].append(current)
+            links = get_links(url, limit, offset)
+            if links is not None:
+                tmp = result
+                result = {'response': tmp, 'links': links}
             data = json.dumps(result, default=str)
             res = Response(data, status=200, content_type='application/json')
             return res
@@ -366,7 +366,7 @@ def handle_error(e, result):
 
 
 def get_links(url, limit, offset):
-    if limit is None and offset is None:
+    if limit is None:
         return None
     links = []
     cur_link = {'rel': 'current',
