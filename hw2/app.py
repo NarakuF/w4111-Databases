@@ -318,7 +318,7 @@ def get_resource(dbname, resource_name):
             result = rdb.find_by_template(query_params, fields, limit, offset)
             if limit is not None:
                 url = context.get('url', '')
-                result['links'] = []
+                result['links'] = get_links(url, limit, offset)
                 current = {'rel': 'current',
                            'href': url}
                 result['links'].append(current)
@@ -363,6 +363,29 @@ def get_by_path_key(dbname, parent_name, primary_key, target_name, target_key):
 # You can ignore this method.
 def handle_error(e, result):
     return "HTTP: 504 Internal error.", 504, {'Content-Type': 'text/plain; charset=utf-8'}
+
+
+def get_links(url, limit, offset):
+    if limit is None and offset is None:
+        return None
+    links = []
+    cur_link = {'rel': 'current',
+                'href': url}
+    links.append(cur_link)
+    if offset is None:
+        next_link = {'rel': 'next',
+                     'href': f'{url}&offset={str(limit)}'}
+        links.append(next_link)
+        return links
+    tokens = url.split('offset=')
+    tokens[1] = tokens[1][1:]
+    next_link = {'rel': 'next',
+                 'href': f'{tokens[0]}offset={str(limit + offset)}{tokens[1]}'}
+    links.append(next_link)
+    prev_link = {'rel': 'previous',
+                 'href': f'{tokens[0]}offset={str(max(0, limit - offset))}{tokens[1]}'}
+    links.append(prev_link)
+    return links
 
 
 # run the app.
