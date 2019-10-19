@@ -202,7 +202,6 @@ def dbs():
     if not inputs.get('query_params', None):
         handle_error(None, None)
     databases = dta.get_databases()
-    databases = list(set([k.split('.')[0] for k in databases]))
     data = json.dumps(databases)
     res = Response(data, status=200, content_type='application/json')
     return res
@@ -224,9 +223,9 @@ def tbls(dbname):
     #
     if not inputs.get('query_params', None):
         handle_error(None, None)
-    databases = dta.get_databases()
+    db_tables = dta.get_db_tables()
     tables = []
-    for k in databases:
+    for k in db_tables:
         db, table = k.split('.')
         if db == dbname:
             tables.append(table)
@@ -311,7 +310,6 @@ def get_resource(dbname, resource_name):
         limit = context.get('limit', None)
         offset = context.get('offset', None)
 
-
         if request.method == 'GET':
             #
             # SOME CODE GOES HERE
@@ -374,11 +372,13 @@ def get_links(url, limit, offset):
     links.append(cur_link)
     if offset is None:
         next_link = {'rel': 'next',
-                     'href': f'{url}&offset={str(limit)}'}
+                     'href': f'{url}&offset={limit}'}
         links.append(next_link)
         return links
     tokens = url.split('offset=')
     tokens[1] = tokens[1][1:]
+    limit = int(limit)
+    offset = int(offset)
     next_link = {'rel': 'next',
                  'href': f'{tokens[0]}offset={str(limit + offset)}{tokens[1]}'}
     links.append(next_link)

@@ -51,5 +51,9 @@ def get_databases():
 
     :return: A list of databases/schema at this endpoint.
     """
-    # TODO: show databases or just return global
+    databases = list(set([k.split('.')[0] for k in _db_tables]))
+    return databases
+
+
+def get_db_tables():
     return _db_tables
