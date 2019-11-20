@@ -140,6 +140,7 @@ class RDBDataTable:
         # Hint. THE ORDER OF THE COLUMNS IN THE KEY DEFINITION MATTERS.
         sql = f"SHOW KEYS FROM {self._full_table_name} WHERE Key_name = 'PRIMARY'"
         _, data = dbutils.run_q(sql, conn=self._cnx)
+        print(data)
         primary_key = [d['Column_name'] for d in data]
         self._key_columns = primary_key
 
@@ -328,6 +329,5 @@ class RDBDataTable:
 
 
 if __name__ == '__main__':
-    db = RDBDataTable('people', 'lahman2019clean')
-    print(db.row_count)
+    db = RDBDataTable('appearances', 'lahman2019clean')
     print(db.key_columns)
