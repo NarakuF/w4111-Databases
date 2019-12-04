@@ -1,5 +1,6 @@
 import pymysql  # connect to your root server
 import json  # json object
+import dbutils
 
 # purpose:
 # Creating a new schema in the local database that holds tables containing the DB definitions
@@ -106,17 +107,26 @@ class IndexDefinition:
         :param column_names: list of column names assc with that index
         """
         #YOUR CODE GOES HERE#
+        self.index_name = index_name
+        if index_type not in IndexDefinition.index_types:
+            raise ValueError('That index type is not accepted. Please try again.')
+        self.index_type = index_type
 
+        if not column_names or len(column_names) == 0:
+            raise ValueError('Column names necessary')
+        self.column_names = column_names
 
     def __str__(self):
         return json.dumps(self.to_json(), indent=2)
 
     def to_json(self):
-
         #YOUR CODE GOES HERE#
-
-
-        return
+        result = {
+            "index_name": self.index_name,
+            "index_type": self.index_type,
+            "column_names": self.column_names
+        }
+        return result
 
 
 class TableDefinition:
@@ -172,6 +182,15 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
+        sql = f"select * from CSVCatalog.csvcolumns where table_name = '{self.table_name}'"
+        res, data = dbutils.run_q(sql, conn=self.cnx)
+        if self.columns is None:
+            self.columns = []
+        for d in data:
+            # TODO
+            col = ColumnDefinition(d['column_name'], d['type'], d['not_null'] == True)
+            self.columns.append(col)
+
     def load_indexes(self):
         '''
         #YOUR CODE HERE
@@ -348,9 +367,10 @@ class CSVCatalog:
         #YOUR CODE HERE
         '''
 
-
     def get_table(self, table_name):
         '''
         #YOUR CODE HERE
         '''
+        table = TableDefinition(table_name, cnx=self.cnx, load=True)
+        return table
 
