@@ -200,11 +200,16 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
+        sql = "insert into CSVCatalog.csvtables values ({self.table_name}, {self.file_name})"
+        dbutils.run_q(sql, fetch=False, conn=self.cnx)
 
     def load_core_definition(self):
         '''
         #YOUR CODE HERE
         '''
+        sql = "select * from CSVCatalog.csvtables where table_name='{self.table_name}'"
+        res, data = dbutils.run_q(sql, conn=self.cnx)
+        self.file_name = data[0]['file_name']
 
     def __str__(self):
         return json.dumps(self.to_json(), indent=2)
