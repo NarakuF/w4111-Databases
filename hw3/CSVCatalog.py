@@ -1,6 +1,6 @@
 import pymysql  # connect to your root server
 import json  # json object
-import dbutils
+import copy
 
 # purpose:
 # Creating a new schema in the local database that holds tables containing the DB definitions
@@ -100,13 +100,14 @@ class IndexDefinition:
     """
     index_types = ("PRIMARY", "UNIQUE", "INDEX")
 
-    def __init__(self, index_name: object, index_type: object, column_names: object) -> object:
+    def __init__(self, table_name, index_name, index_type, column_names):
         """
         :param index_name: Name for index. Must be unique name for table.
         :param index_type: Valid index type.
         :param column_names: list of column names assc with that index
         """
         #YOUR CODE GOES HERE#
+        self.table_name = table_name
         self.index_name = index_name
         if index_type not in IndexDefinition.index_types:
             raise ValueError('That index type is not accepted. Please try again.')
@@ -114,7 +115,7 @@ class IndexDefinition:
 
         if not column_names or len(column_names) == 0:
             raise ValueError('Column names necessary')
-        self.column_names = column_names
+        self.column_names = copy.copy(column_names)
 
     def __str__(self):
         return json.dumps(self.to_json(), indent=2)
@@ -122,6 +123,7 @@ class IndexDefinition:
     def to_json(self):
         #YOUR CODE GOES HERE#
         result = {
+            "table_name": self.table_name,
             "index_name": self.index_name,
             "index_type": self.index_type,
             "column_names": self.column_names
@@ -164,7 +166,7 @@ class TableDefinition:
 
             if index_definitions is not None:
                 for idx in index_definitions:
-                    self.define_index(idx)
+                    self.define_index(idx, self.columns)
 
         else:
             self.load_core_definition()
@@ -182,39 +184,55 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
-        sql = f"select * from CSVCatalog.csvcolumns where table_name = '{self.table_name}'"
-        res, data = dbutils.run_q(sql, conn=self.cnx)
-        if self.columns is None:
-            self.columns = []
-        for d in data:
-            # TODO
-            col = ColumnDefinition(d['column_name'], d['type'], d['not_null'] == True)
-            self.columns.append(col)
+        q = "select * from CSVCatalog.columns where table_name = %s"
+        res = run_q(self.cnx, q, args=self.table_name, fetch=True)
+        self.columns = []
+        for r in res:
+            c = ColumnDefinition(r['column_name'], r['type'], r['nullable'])
+            self.columns.append(c)
+        return self.columns
 
     def load_indexes(self):
         '''
         #YOUR CODE HERE
         '''
+        q = "select * from CSVCatalog.indexes where table_name = %s order by name, positon"
+        res = run_q(self.cnx, q, args=self.table_name, fetch=True)
+
+        tmp = {}
+        for r in res:
+            i_name = res['name']
+            this_i = tmp.get(i_name, None)
+            if this_i is None:
+                this_i = {'name': i_name, 'type': r['type'], 'table_name': r['table_name'], 'columns': []}
+            this_i['columns'].append(r['column_name'])
+            tmp[i_name] = this_i
+
+        self.indexes = {}
+        for k, v in tmp.items():
+            n_i = IndexDefinition(self.table_name, v['name'], v['type'], v['columns'])
+            self.indexes[k] = n_i
 
     def save_core_definition(self):
         '''
         #YOUR CODE HERE
         '''
-        sql = "insert into CSVCatalog.csvtables values ({self.table_name}, {self.file_name})"
-        dbutils.run_q(sql, fetch=False, conn=self.cnx)
+        q = "insert into CSVCatalog.tables values (%s, %s)"
+        res = run_q(self.cnx, q, args=(self.table_name, self.file_name), fetch=False)
+        return res
 
     def load_core_definition(self):
         '''
         #YOUR CODE HERE
         '''
-        sql = "select * from CSVCatalog.csvtables where table_name='{self.table_name}'"
-        res, data = dbutils.run_q(sql, conn=self.cnx)
-        self.file_name = data[0]['file_name']
+        q = "select * from CSVCatalog.tables where table_name=%s"
+        res = run_q(self.cnx, q, args=self.table_name, fetch=True)
+        self.table_name = res[0]['table_name']
+        self.file_name = res[0]['file_name']
 
     def __str__(self):
         return json.dumps(self.to_json(), indent=2)
 
-    @classmethod  # classmethod means method that can be called by objects of this class
     def add_column_definition(self, c):
         """
         Add a column definition.
@@ -224,6 +242,15 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
+        try:
+            q = "insert into CSVCatalog.columns values(%s, %s, %s, %s)"
+            run_q(self.cnx, q, args=(self.table_name, c.column_name, c.column_type, c.not_null), fetch=False)
+
+            if self.columns is None:
+                self.columns = []
+            self.columns.append(copy.copy(c))
+        except Exception as e:
+            raise e
 
     def get_column(self, cn):
         """
@@ -234,6 +261,14 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
+        if self.columns is None:
+            return None
+
+        for c in self.columns:
+            if c.column_name == cn:
+                return c
+        return None
+
     def drop_column_definition(self, c):
         """
         Remove from definition and catalog tables.
@@ -244,7 +279,14 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
-
+        try:
+            q = "delete from CSVCatalog.columns where table_name = %s and column_name = %s"
+            res = run_q(self.cnx, q, args=(self.table_name, c), fetch=False)
+            if res != 1:
+                raise Exception("No column.")
+            self.columns.remove(c)
+        except Exception as e:
+            raise e
 
     def to_json(self):
         """
@@ -262,7 +304,7 @@ class TableDefinition:
 
         if self.indexes is not None:
             result['indexes'] = []
-            for idx in self.indexes:
+            for n, idx in self.indexes.items():
                 result['indexes'].append(idx.to_json())
         return result
 
@@ -280,6 +322,9 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
+        q = "insert into CSVCatalog.indexes values(%s, %s, %s, %s, %s)"
+        for i in range(len(cols)):
+            run_q(self.cnx, q, args=(i_name, self.table_name, cols[i], type, i), fetch=False)
 
     def define_index(self, index_name, columns, kind="index"):
         """
@@ -291,13 +336,12 @@ class TableDefinition:
         """
         self.save_index_definition(index_name, columns, kind)
         if self.indexes is None:
-            self.indexes = []
-        for i in range(0, len(columns)):
-            new_idx = IndexDefinition(index_name, kind, columns[i].column_name)
-            self.indexes.append(new_idx)
+            self.indexes = {}
+        new_idx = IndexDefinition(self.table_name, index_name, kind, columns)
+        self.indexes[index_name] = new_idx
 
     def get_index_cols(self, index_name):
-        q = "select column_name, string_i from CSVCatalog.csvindexes where index_name = '" + index_name + "';"
+        q = "select column_name, string_i from CSVCatalog.indexes where index_name = '" + index_name + "';"
         result = run_q(self.cnx, q, None, fetch=True)
         # ordering statements! debugged with prints!
         # print("RESULT:", result)
@@ -319,7 +363,7 @@ class TableDefinition:
         :param cn: name of the column you are trying to get.
         :return:
         """
-        for index in self.indexes:
+        for n, index in self.indexes.items():
             if index.index_name == ind_name:
                 return index
         print("Index '" + ind_name + "' not found")
@@ -334,9 +378,14 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
-
-
-
+        try:
+            q = "delete from CSVCatalog.indexes where table_name = %s and index_name = %s"
+            res = run_q(self.cnx, q, args=(self.table_name, index_name), fetch=False)
+            if res != 1:
+                raise Exception("No index.")
+            self.indexes.remove(index_name)
+        except Exception as e:
+            raise e
 
     def describe_table(self):
         """
@@ -371,6 +420,15 @@ class CSVCatalog:
         '''
         #YOUR CODE HERE
         '''
+        try:
+            q = "delete from CSVCatalog.csvtables where table_name = %s"
+            run_q(self.cnx, q, args=table_name, fetch=False)
+            q = "delete from CSVCatalog.columns where table_name = %s"
+            run_q(self.cnx, q, args=table_name, fetch=False)
+            q = "delete from CSVCatalog.indexes where table_name = %s"
+            run_q(self.cnx, q, args=table_name, fetch=False)
+        except Exception as e:
+            raise e
 
     def get_table(self, table_name):
         '''
@@ -378,4 +436,3 @@ class CSVCatalog:
         '''
         table = TableDefinition(table_name, cnx=self.cnx, load=True)
         return table
-
