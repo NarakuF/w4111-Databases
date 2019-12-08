@@ -80,7 +80,7 @@ class ColumnDefinition:
 
     def __str__(self):
         # returns the table object in json format
-        return json.dumps(self.to_json(), indent=2)
+        return json.dumps(self.to_json(), indent=2, default=str)
 
     def to_json(self):
         """
@@ -118,7 +118,7 @@ class IndexDefinition:
         self.column_names = copy.copy(column_names)
 
     def __str__(self):
-        return json.dumps(self.to_json(), indent=2)
+        return json.dumps(self.to_json(), indent=2, default=str)
 
     def to_json(self):
         #YOUR CODE GOES HERE#
@@ -196,12 +196,12 @@ class TableDefinition:
         '''
         #YOUR CODE HERE
         '''
-        q = "select * from CSVCatalog.indexes where table_name = %s order by name, positon"
+        q = "select * from CSVCatalog.indexes where table_name = %s order by index_name, position"
         res = run_q(self.cnx, q, args=self.table_name, fetch=True)
 
         tmp = {}
         for r in res:
-            i_name = res['name']
+            i_name = r['index_name']
             this_i = tmp.get(i_name, None)
             if this_i is None:
                 this_i = {'name': i_name, 'type': r['type'], 'table_name': r['table_name'], 'columns': []}
@@ -231,7 +231,7 @@ class TableDefinition:
         self.file_name = res[0]['file_name']
 
     def __str__(self):
-        return json.dumps(self.to_json(), indent=2)
+        return json.dumps(self.to_json(), indent=2, default=str)
 
     def add_column_definition(self, c):
         """
@@ -281,10 +281,8 @@ class TableDefinition:
         '''
         try:
             q = "delete from CSVCatalog.columns where table_name = %s and column_name = %s"
-            res = run_q(self.cnx, q, args=(self.table_name, c), fetch=False)
-            if res != 1:
-                raise Exception("No column.")
-            self.columns.remove(c)
+            run_q(self.cnx, q, args=(self.table_name, c), fetch=False)
+            self.columns.remove(self.get_column(c))
         except Exception as e:
             raise e
 
@@ -324,7 +322,7 @@ class TableDefinition:
         '''
         q = "insert into CSVCatalog.indexes values(%s, %s, %s, %s, %s)"
         for i in range(len(cols)):
-            run_q(self.cnx, q, args=(i_name, self.table_name, cols[i], type, i), fetch=False)
+            run_q(self.cnx, q, args=(self.table_name, cols[i], i_name, type, i), fetch=False)
 
     def define_index(self, index_name, columns, kind="index"):
         """
@@ -410,7 +408,7 @@ class CSVCatalog:
         )
 
     def __str__(self):
-        pass
+        return "CSVCatalog ..., cnx = " + str(self.cnx)
 
     def create_table(self, table_name, file_name, column_definitions=None, primary_key_columns=None):
         result = TableDefinition(table_name, file_name, cnx=self.cnx)
