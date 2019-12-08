@@ -1,0 +1,69 @@
+T1: result = 
+ CSVCatalog ..., cnx = <pymysql.connections.Connection object at 0x000001973E12F208>
+
+T2: result = 
+ {
+  "table_name": "People",
+  "file_name": "./People.csv"
+}
+
+T3: result = 
+ {
+  "table_name": "People",
+  "file_name": "./People.csv",
+  "columns": [],
+  "indexes": []
+}
+
+T4: result = 
+ {
+  "table_name": "Batting",
+  "file_name": "./Batting.csv"
+}
+
+T4: result = 
+ {
+  "table_name": "People",
+  "file_name": "./People.csv",
+  "columns": [],
+  "indexes": []
+}
+
+T5: result = 
+ {
+  "column_name": "playerID",
+  "column_type": "text",
+  "not_null": true
+}
+
+T6: result = 
+ {
+  "table_name": "People",
+  "index_name": "abc",
+  "index_type": "PRIMARY",
+  "column_names": [
+    "playerID",
+    "TeamID",
+    "yearID",
+    "stint"
+  ]
+}
+
+T7: test for column operations
+
+Before adding:  None
+After adding:  {
+  "column_name": "playerID",
+  "column_type": "text",
+  "not_null": false
+}
+After dropping:  None
+Correct. Cannot drop twice.
+
+T8: result = 
+
+{
+  "column_name": "playerID",
+  "column_type": "text",
+  "not_null": 0
+}
